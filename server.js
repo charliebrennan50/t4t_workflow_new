@@ -34,11 +34,22 @@ app.get("/", async (req, res) => {
 
 app.post("/api/finalize", async (req, res) => {
   const { control_number, status, bags, bin } = req.body;
+
   try {
-    await pool.query(
-      `UPDATE recipients SET status = $1, bags = $2, bin = $3 WHERE control_number = $4`,
-      [status, bags || null, bin || null, control_number]
-    );
+    if (bags !== undefined && bin !== undefined) {
+      // Being Shopped: write bags and bin once
+      await pool.query(
+        `UPDATE recipients SET status=$1, bags=$2, bin=$3 WHERE control_number=$4`,
+        [status, bags, bin, control_number]
+      );
+    } else {
+      // Only update status
+      await pool.query(
+        `UPDATE recipients SET status=$1 WHERE control_number=$2`,
+        [status, control_number]
+      );
+    }
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);

@@ -1,5 +1,5 @@
 <script>
-  // GLOBAL printReceipt — works perfectly
+  // GLOBAL printReceipt
   function printReceipt(text) {
     const win = window.open('', '_blank', 'width=380,height=600');
     win.document.write(`
@@ -14,7 +14,7 @@
   // OPEN MODALS
   function openShoppingModal(family) {
     document.getElementById('shopControl').textContent = family.control_number;
-    document.getElementById('shopKids').innerHTML = family.children.map(c => 
+    document.getElementById('shopKids').innerHTML = family.children.map(c =>
       `<strong>${c.gender} age ${c.age}</strong>` + (c.special_requests ? `<br><em class="text-danger">${c.special_requests}</em>` : '')
     ).join('<br>');
     new bootstrap.Modal(document.getElementById('shoppingModal')).show();
@@ -22,8 +22,8 @@
 
   function openBagsModal(family) {
     document.getElementById('bagsControl').textContent = family.control_number;
-    document.getElementById('numBags').value = 1;
-    document.getElementById('binLocation').value = 'A12';
+    document.getElementById('numBags').value = family.bags || 1;
+    document.getElementById('binLocation').value = family.bin || 'A12';
     new bootstrap.Modal(document.getElementById('bagsModal')).show();
   }
 
@@ -33,49 +33,104 @@
     new bootstrap.Modal(document.getElementById('pickupModal')).show();
   }
 
-  // PRINT & SAVE — 100% WORKING
-  async function printShoppingCard() {
+  // SHOPPING MODAL FUNCTIONS
+  async function finalizeShopping() {
+    const control = document.getElementById('shopControl').textContent;
+    const family = families.find(f => f.control_number === control);
+    if (!family) return;
+
+    try {
+      await fetch("/api/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ control_number: control, status: "being_shopped" })
+      });
+
+      family.status = "being_shopped";
+      renderFamilies();
+      showSection('being_shopped');
+
+      const modal = bootstrap.Modal.getInstance(document.getElementById('shoppingModal'));
+      if (modal) modal.hide();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update status");
+    }
+  }
+
+  function printShoppingCard() {
     const control = document.getElementById('shopControl').textContent;
     const family = families.find(f => f.control_number === control);
     const kids = family.children.map(c => `${c.gender} age ${c.age}` + (c.special_requests ? ` — ${c.special_requests}` : '')).join('\n');
     printReceipt(`TOYS FOR TOTS SOUTH BREVARD\nCONTROL: ${control}\n${kids}\nThank you!`);
-
-    await fetch("/api/finalize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ control_number: control, status: "being_shopped" })
-    });
-    location.reload();
   }
 
-  async function saveAndPrintBagLabels() {
+  // BAGS & BIN MODAL FUNCTIONS
+  async function finalizeBags() {
     const control = document.getElementById('bagsControl').textContent;
-    const bags = document.getElementById('numBags').value || 1;
+    const family = families.find(f => f.control_number === control);
+    const bags = parseInt(document.getElementById('numBags').value) || 1;
+    const bin = document.getElementById('binLocation').value.trim() || "UNKNOWN";
+
+    try {
+      await fetch("/api/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ control_number: control, status: "ready_for_pickup", bags, bin })
+      });
+
+      family.status = "ready_for_pickup";
+      family.bags = bags;
+      family.bin = bin;
+      renderFamilies();
+      showSection('ready_for_pickup');
+
+      const modal = bootstrap.Modal.getInstance(document.getElementById('bagsModal'));
+      if (modal) modal.hide();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update bags/bin");
+    }
+  }
+
+  function printBagLabels() {
+    const control = document.getElementById('bagsControl').textContent;
+    const bags = parseInt(document.getElementById('numBags').value) || 1;
     const bin = document.getElementById('binLocation').value.trim() || "UNKNOWN";
 
     for (let i = 1; i <= bags; i++) {
       printReceipt(`BAG LABEL\nControl: ${control}\nBag ${i} of ${bags}\nBin: ${bin}`);
     }
-
-    await fetch("/api/finalize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ control_number: control, status: "ready_for_pickup", bags, bin })
-    });
-    location.reload();
   }
 
-  async function printPickupCard() {
+  // PICKUP MODAL FUNCTIONS
+  async function finalizePickup() {
+    const control = document.getElementById('pickupControl').textContent;
+    const family = families.find(f => f.control_number === control);
+
+    try {
+      await fetch("/api/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ control_number: control, status: "complete" })
+      });
+
+      family.status = "complete";
+      renderFamilies();
+      showSection('complete');
+
+      const modal = bootstrap.Modal.getInstance(document.getElementById('pickupModal'));
+      if (modal) modal.hide();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to mark complete");
+    }
+  }
+
+  function printPickupCard() {
     const control = document.getElementById('pickupControl').textContent;
     const bin = document.getElementById('pickupBin').textContent;
     printReceipt(`PICKUP READY!\nControl: ${control}\nBin Location: ${bin}\nThank you!`);
-
-    await fetch("/api/finalize", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ control_number: control, status: "complete" })
-    });
-    location.reload();
   }
 </script>
 
@@ -94,7 +149,8 @@
       </div>
       <div class="modal-footer justify-content-center">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-success btn-lg" onclick="printShoppingCard()">Print & Start</button>
+        <button class="btn btn-success btn-lg" onclick="finalizeShopping()">Start Shopping</button>
+        <button class="btn btn-primary btn-lg" onclick="printShoppingCard()">Print Card</button>
       </div>
     </div>
   </div>
@@ -123,7 +179,8 @@
       </div>
       <div class="modal-footer justify-content-center">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-info btn-lg" onclick="saveAndPrintBagLabels()">Print Labels & Save</button>
+        <button class="btn btn-info btn-lg" onclick="finalizeBags()">Save & Update Status</button>
+        <button class="btn btn-primary btn-lg" onclick="printBagLabels()">Print Labels</button>
       </div>
     </div>
   </div>
@@ -144,7 +201,8 @@
       </div>
       <div class="modal-footer justify-content-center">
         <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-success btn-lg" onclick="printPickupCard()">Print & Complete</button>
+        <button class="btn btn-success btn-lg" onclick="finalizePickup()">Mark Complete</button>
+        <button class="btn btn-primary btn-lg" onclick="printPickupCard()">Print Card</button>
       </div>
     </div>
   </div>
