@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>T4T South Brevard 2025</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background:#f8f9fa; margin:0; }
+    .sidebar { width:280px; background:#212529; color:white; position:fixed; top:0; bottom:0; left:0; z-index:1000; padding:20px; }
+    .main-content { margin-left:280px; padding:20px; }
+    .status-section { display:none; }
+    .family-row { background:white; padding:1.5rem; margin-bottom:1rem; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.1); cursor:pointer; }
+    .family-row:hover { background:#e3f2fd; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h3 class="text-center mb-4">T4T Workflow</h3>
+    <div class="input-group input-group-lg mb-4">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search control #">
+      <button class="btn btn-outline-light" onclick="searchControl()">Go</button>
+    </div>
+    <div class="d-grid gap-3">
+      <button class="btn btn-primary btn-lg" onclick="showSection('approved')">Approved</button>
+      <button class="btn btn-warning btn-lg text-dark" onclick="showSection('being_shopped')">Being Shopped</button>
+      <button class="btn btn-info btn-lg" onclick="showSection('ready_for_pickup')">Ready for Pickup</button>
+      <button class="btn btn-success btn-lg" onclick="showSection('complete')">Complete</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <h1 class="text-center mb-5 text-primary display-4">Toys for Tots South Brevard 2025</h1>
+    <div id="section-approved" class="status-section"><h2 class="text-primary">Approved</h2><div id="approved"></div></div>
+    <div id="section-being_shopped" class="status-section"><h2 class="text-warning">Being Shopped</h2><div id="being_shopped"></div></div>
+    <div id="section-ready_for_pickup" class="status-section"><h2 class="text-info">Ready for Pickup</h2><div id="ready_for_pickup"></div></div>
+    <div id="section-complete" class="status-section"><h2 class="text-success">Complete</h2><div id="complete"></div></div>
+  </div>
+
+  <%- include('partials/modals') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const families = <%- JSON.stringify(families) %>;
+
+    function renderFamilies() {
+      const groups = { approved: [], being_shopped: [], ready_for_pickup: [], complete: [] };
+      families.forEach(f => {
+        const key = f.status || 'approved';
+        if (groups[key]) groups[key].push(f);
+      });
+
+      Object.keys(groups).forEach(status => {
+        const container = document.getElementById(status);
+        container.innerHTML = groups[status].length === 0
+          ? '<p class="text-center text-muted my-5 fs-3">No families</p>'
+          : groups[status].map(f => {
+              const kids = f.children.map(c => `${c.gender} age ${c.age}` + (c.special_requests ? ` — ${c.special_requests}` : '')).join('<br>');
+              return `<div class="family-row" onclick="handleClick('${f.control_number}', '${f.status || 'approved'}')">
+                <strong>#${f.control_number}</strong><br><div class="mt-2">${kids}</div>
+              </div>`;
+            }).join('');
+      });
+    }
+
+    function showSection(section) {
+      document.querySelectorAll('.status-section').forEach(s => s.style.display = 'none');
+      document.getElementById(`section-${section}`).style.display = 'block';
+    }
+
+    function handleClick(control, status) {
+      const family = families.find(f => f.control_number === control);
+      if (status === 'approved') openShoppingModal(family);
+      else if (status === 'being_shopped') openBagsModal(family);
+      else if (status === 'ready_for_pickup') openPickupModal(family);
+    }
+
+    document.getElementById('searchInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') searchControl();
+    });
+
+    function searchControl() {
+      const input = document.getElementById('searchInput');
+      let control = input.value.trim();
+      if (/^\d{1,7}$/.test(control)) control = control.padStart(7, '2400');
+      const family = families.find(f => f.control_number === control);
+      if (!family) {
+        alert(`Control number ${control} not found`);
+        return;
+      }
+      document.querySelectorAll('.family-row').forEach(r => r.classList.remove('highlight-search'));
+      const row = document.querySelector(`[onclick*="\'${control}\'"]`);
+      if (row) {
+        row.classList.add('highlight-search');
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      input.value = '';
+    }
+
+    renderFamilies();
+    showSection('being_shopped');
+  </script>
+  <style>
+    .highlight-search { background:#fff3cd !important; border-left:6px solid #ffc107 !important; }
+  </style>
+</body>
+</html>
