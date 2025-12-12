@@ -1,22 +1,24 @@
-require('dotenv').config();
-const express = require('express');
-const { Pool } = require('pg');
+require("dotenv").config();
+const express = require("express");
+const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static('public'));
-app.set('view engine', 'ejs');
-app.set('views', './views');
+app.use(express.static("public"));
+app.set("view engine", "ejs");
+app.set("views", "./views");
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgres://postgres:Meaghan1@localhost:5432/t4t_workflow',
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+  connectionString:
+    process.env.DATABASE_URL ||
+    "postgres://postgres:Meaghan1@localhost:5432/t4t_workflow",
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
 // GET home page
-app.get('/', async (req, res) => {
+app.get("/", async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT r.*, 
@@ -30,36 +32,50 @@ app.get('/', async (req, res) => {
       GROUP BY r.id
       ORDER BY r.control_number
     `);
-    res.render('index', { families: result.rows });
+    res.render("index", { families: result.rows });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.status(500).send("Server error");
   }
 });
 
-// POST: update status, bags, bin
-// server.js
 app.post("/api/finalize", async (req, res) => {
-  const { control_number, status, bags, bin, toys, books, stuffers } = req.body;
-
-  console.log(`[FINALIZE] Received: control=${control_number}, status=${status}, bags=${bags}, bin=${bin}, toys=${toys}, books=${books}, stuffers=${stuffers}`);
+  const {
+    control_number,
+    status,
+    bags,
+    bin,
+    toys,
+    books,
+    stuffers,
+    pickup_date,
+  } = req.body;
 
   try {
-    if (status === "being_shopped" || status === "complete") {
-      // Only update the status for these cases
-      console.log(`[FINALIZE] Status-only update for control ${control_number}`);
+    if (status === "being_shopped") {
       await pool.query(
         `UPDATE recipients SET status = $1 WHERE control_number = $2`,
         [status, control_number]
       );
+    } else if (status === "complete") {
+      await pool.query(
+        `UPDATE recipients SET status = $1, pickup_date = $2 WHERE control_number = $3`,
+        [status, pickup_date, control_number]
+      );
     } else {
-      // Update all fields (for initial save in being_shopped modal)
-      console.log(`[FINALIZE] Full update for control ${control_number}`);
       await pool.query(
         `UPDATE recipients 
          SET status = $1, bags = $2, bin = $3, toys = $4, books = $5, stuffers = $6
          WHERE control_number = $7`,
-        [status, bags || null, bin || null, toys || 0, books || 0, stuffers || 0, control_number]
+        [
+          status,
+          bags || null,
+          bin || null,
+          toys || 0,
+          books || 0,
+          stuffers || 0,
+          control_number,
+        ]
       );
     }
 
@@ -71,21 +87,6 @@ app.post("/api/finalize", async (req, res) => {
   }
 });
 
-// // POST: save distribution (toys/books/stuffers), only once
-// app.post('/api/distribution', async (req, res) => {
-//   const { control_number, toys, books, stuffers } = req.body;
-//   try {
-//     await pool.query(
-//       `INSERT INTO distribution (control_number, toys, books, stuffers)
-//        VALUES ($1, $2, $3, $4)
-//        ON CONFLICT (control_number) DO NOTHING`,
-//       [control_number, toys, books, stuffers]
-//     );
-//     res.json({ success: true });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ success: false });
-//   }
-// });
-
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server running at http://localhost:${PORT}`)
+);

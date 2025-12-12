@@ -1,13 +1,35 @@
 <script>
   // GLOBAL printReceipt — works for all print actions
-  function printReceipt(text) {
+  // function printReceipt(text) {
+  //   const printWindow = window.open("", "", "width=380,height=600");
+  //   printWindow.document.write(`
+  //     <pre style="font-family:monospace;font-size:16px;line-height:1.4;margin:20px;">${text}</pre>
+  //     <script>
+  //       window.onload = () => { window.print(); window.close(); }
+  //     <\/script>
+  //   `);
+  //   printWindow.document.close();
+  // }
+
+  function printReceipt(htmlContent) {
     const printWindow = window.open("", "", "width=380,height=600");
     printWindow.document.write(`
-      <pre style="font-family:monospace;font-size:16px;line-height:1.4;margin:20px;">${text}</pre>
-      <script>
-        window.onload = () => { window.print(); window.close(); }
-      <\/script>
-    `);
+    <html>
+      <head>
+        <title>Print</title>
+        <style>
+          body { font-family: monospace; font-size: 24px; line-height: 1.4; text-align: center; margin: 20px; }
+          .label { page-break-after: always; }
+        </style>
+      </head>
+      <body>
+        ${htmlContent}
+        <script>
+          window.onload = () => { window.print(); window.close(); };
+        <\/script>
+      </body>
+    </html>
+  `);
     printWindow.document.close();
   }
 
@@ -29,7 +51,7 @@
   function openBagsModal(family) {
     document.getElementById("bagsControl").textContent = family.control_number;
     const numChildren = family.children.length || 1;
-    document.getElementById("numBags").value = 1;
+    // document.getElementById("numBags").value = 1;
     // document.getElementById("binLocation").value = "A12";
     document.getElementById("numToys").value = numChildren * 4;
     document.getElementById("numBooks").value = numChildren;
@@ -61,17 +83,38 @@
     );
   }
 
+  // function printBagLabels() {
+  //   const control = document.getElementById("bagsControl").textContent;
+  //   const bags = parseInt(document.getElementById("numBags").value) || 1;
+  //   const bin =
+  //     document.getElementById("binLocation").value.trim() || "UNKNOWN";
+
+  //   for (let i = 1; i <= bags; i++) {
+  //     printReceipt(
+  //       `BAG LABEL\nControl: ${control}\nBag ${i} of ${bags}\nBin: ${bin}\n\n\f\n`
+  //     );
+  //   }
+  // }
+
   function printBagLabels() {
     const control = document.getElementById("bagsControl").textContent;
     const bags = parseInt(document.getElementById("numBags").value) || 1;
     const bin =
       document.getElementById("binLocation").value.trim() || "UNKNOWN";
 
+    let labelsHtml = "";
     for (let i = 1; i <= bags; i++) {
-      printReceipt(
-        `BAG LABEL\nControl: ${control}\nBag ${i} of ${bags}\nBin: ${bin}`
-      );
+      labelsHtml += `
+      <div class="label">
+        <strong>BAG LABEL</strong><br>
+        Control: ${control}<br>
+        Bag ${i} of ${bags}<br>
+        Bin: ${bin}
+      </div>
+    `;
     }
+
+    printReceipt(labelsHtml);
   }
 
   function printPickupCard() {
@@ -128,10 +171,16 @@
   async function finalizePickup() {
     const control = document.getElementById("pickupControl").textContent;
 
+    const today = new Date().toISOString().slice(0, 10);
+
     await fetch("/api/finalize", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ control_number: control, status: "complete" }),
+      body: JSON.stringify({
+        control_number: control,
+        status: "complete",
+        pickup_date: today,
+      }),
     });
 
     location.reload();
@@ -191,7 +240,8 @@
               class="form-control text-center"
               type="number"
               min="1"
-              value="1"
+              placeholder="Enter Number of Bags"
+              required
             />
           </div>
           <div class="col-6">
@@ -200,7 +250,7 @@
               id="binLocation"
               class="form-control text-center"
               type="number"
-              placeholder="Input Bin"
+              placeholder="Enter Bin Number"
               required
             />
           </div>
