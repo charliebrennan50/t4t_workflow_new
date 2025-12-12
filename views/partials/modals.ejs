@@ -18,7 +18,7 @@
       <head>
         <title>Print</title>
         <style>
-          body { font-family: monospace; font-size: 24px; line-height: 1.4; text-align: center; margin: 20px; }
+          body { font-family: monospace; font-size: 18px; line-height: 1; text-align: center; margin: 0px; }
           .label { page-break-after: always; }
         </style>
       </head>
@@ -64,6 +64,8 @@
       family.control_number;
     document.getElementById("pickupBin").textContent =
       family.bin || "Ask staff";
+    document.getElementById("pickupBags").textContent =
+      family.bags || "Ask staff";
     new bootstrap.Modal(document.getElementById("pickupModal")).show();
   }
 
@@ -77,10 +79,21 @@
           `${c.gender} age ${c.age}` +
           (c.special_requests ? ` — ${c.special_requests}` : "")
       )
-      .join("\n");
-    printReceipt(
-      `TOYS FOR TOTS SOUTH BREVARD\nCONTROL: ${control}\n${kids}\nThank you!`
-    );
+      .join("<br>");
+
+    shopHtml = `
+      <div class="label">
+        ${control}<br>
+        ${kids}<br>
+        <strong>Thank You!</strong>
+      </div>
+    `;
+
+    // printReceipt(
+    //   `TOYS FOR TOTS SOUTH BREVARD\nCONTROL: ${control}\n${kids}\nThank you!`
+    // );
+
+    printReceipt(shopHtml);
   }
 
   // function printBagLabels() {
@@ -106,8 +119,7 @@
     for (let i = 1; i <= bags; i++) {
       labelsHtml += `
       <div class="label">
-        <strong>BAG LABEL</strong><br>
-        Control: ${control}<br>
+        <strong><h1>${control}</h1><strong>
         Bag ${i} of ${bags}<br>
         Bin: ${bin}
       </div>
@@ -120,9 +132,17 @@
   function printPickupCard() {
     const control = document.getElementById("pickupControl").textContent;
     const bin = document.getElementById("pickupBin").textContent;
-    printReceipt(
-      `PICKUP READY!\nControl: ${control}\nBin Location: ${bin}\nThank you!`
-    );
+    const bags = document.getElementById("pickupBags").textContent;
+
+    pickupHtml = `
+      <div class="label">
+        <strong><h1>${control}</h1><strong>
+        <h3>Bin: ${bin}</h3>
+        <h3>Bags: ${bags}</h3>
+      </div>
+    `;
+
+    printReceipt(pickupHtml);
   }
 
   // SAVE / STATUS FUNCTIONS
@@ -318,6 +338,7 @@
       <div class="modal-body text-center">
         <h3>#<span id="pickupControl"></span></h3>
         <h4>Bin: <span id="pickupBin"></span></h4>
+        <h4>Bags: <span id="pickupBags"></span></h4>
       </div>
       <div class="modal-footer justify-content-center">
         <button class="btn btn-secondary" data-bs-dismiss="modal">

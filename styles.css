@@ -1,0 +1,11 @@
+@media print {
+    @page {
+      size: 2in 2in;
+      margin: 0;
+    }
+  
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+  }
