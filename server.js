@@ -87,6 +87,41 @@ app.post("/api/finalize", async (req, res) => {
   }
 });
 
+app.post("/api/import-recipient", async (req, res) => {
+  // console.log("Received import-recipient request:", req.body); // <--- THIS LINE
+
+  const { control_number, family_comments } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO recipients (control_number, status, family_comment)
+       VALUES ($1, 'approved', $2)
+       ON CONFLICT (control_number) DO NOTHING`,
+      [control_number, family_comments || null]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Import recipient error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post("/api/import-child", async (req, res) => {
+  console.log("Received import-child request:", req.body); // <--- THIS LINE
+
+  const { control_number, gender, age, special_requests } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO children (control_number, gender, age, special_requests)
+       VALUES ($1, $2, $3, $4)`,
+      [control_number, gender, age, special_requests || null]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Import child error:", err);
+    res.status(500).json({ success: false });
+  }
+});
+
 app.listen(PORT, () =>
   console.log(`Server running at http://localhost:${PORT}`)
 );
