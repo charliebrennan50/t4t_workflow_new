@@ -1,4 +1,4 @@
-@media print {
+/* @media print {
     @page {
       size: 2in 2in;
       margin: 0;
@@ -8,4 +8,21 @@
       margin: 0 !important;
       padding: 0 !important;
     }
+  } */
+
+  .label {
+    width: 2in;              /* or whatever your label size is */
+    padding: 0.2in;
+    box-sizing: border-box;
+  }
+  
+  .label h1 {
+    margin: 0 0 0.1in 0;
+    font-size: 24pt;
+    font-weight: bold;
+  }
+  
+  .label p {
+    margin: 0;
+    font-size: 12pt;
   }

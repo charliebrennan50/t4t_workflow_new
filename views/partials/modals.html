@@ -85,7 +85,6 @@
       <div class="label">
         ${control}<br>
         ${kids}<br>
-        <strong>Thank You!</strong>
       </div>
     `;
 
@@ -119,10 +118,10 @@
     for (let i = 1; i <= bags; i++) {
       labelsHtml += `
       <div class="label">
-        <strong><h1>${control}</h1><strong>
-        Bag ${i} of ${bags}<br>
-        Bin: ${bin}
-      </div>
+      <h1 class="control">${control}</h1>
+      <p class="meta">Bag ${i} of ${bags}</p>
+      <p class="meta">Bin: ${bin}</p>
+     </div>
     `;
     }
 
@@ -151,7 +150,9 @@
 
     await fetch("/api/finalize", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         control_number: control,
         status: "being_shopped",
@@ -173,7 +174,9 @@
 
     await fetch("/api/finalize", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         control_number: control,
         status: "ready_for_pickup",
@@ -195,7 +198,9 @@
 
     await fetch("/api/finalize", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         control_number: control,
         status: "complete",
