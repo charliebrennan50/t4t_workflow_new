@@ -17,10 +17,7 @@
     <html>
       <head>
         <title>Print</title>
-        <style>
-          body { font-family: monospace; font-size: 18px; line-height: 1; text-align: center; margin: 0px; }
-          .label { page-break-after: always; }
-        </style>
+        <link rel="stylesheet" href="/styles/styles.css">
       </head>
       <body>
         ${htmlContent}
@@ -118,9 +115,9 @@
     for (let i = 1; i <= bags; i++) {
       labelsHtml += `
       <div class="label">
-      <h1 class="control">${control}</h1>
-      <p class="meta">Bag ${i} of ${bags}</p>
-      <p class="meta">Bin: ${bin}</p>
+      <h1>${control}</h1>
+      <p>Bag ${i} of ${bags}</p>
+      <p>Bin: ${bin}</p>
      </div>
     `;
     }
@@ -135,9 +132,9 @@
 
     pickupHtml = `
       <div class="label">
-        <strong><h1>${control}</h1><strong>
-        <h3>Bin: ${bin}</h3>
-        <h3>Bags: ${bags}</h3>
+        <h1>${control}</h1>
+        <p>Bin: ${bin}</p>
+        <p>Bags: ${bags}</p>
       </div>
     `;
 
