@@ -1,15 +1,3 @@
-// GLOBAL printReceipt — works for all print actions
-// function printReceipt(text) {
-//   const printWindow = window.open("", "", "width=380,height=600");
-//   printWindow.document.write(`
-//     <pre style="font-family:monospace;font-size:16px;line-height:1.4;margin:20px;">${text}</pre>
-//     <script>
-//       window.onload = () => { window.print(); window.close(); }
-//     <\/script>
-//   `);
-//   printWindow.document.close();
-// }
-
 function printReceipt(htmlContent) {
   const printWindow = window.open("", "", "width=380,height=600");
   printWindow.document.write(`
@@ -88,19 +76,6 @@ function printShoppingCard() {
 
   printReceipt(shopHtml);
 }
-
-// function printBagLabels() {
-//   const control = document.getElementById("bagsControl").textContent;
-//   const bags = parseInt(document.getElementById("numBags").value) || 1;
-//   const bin =
-//     document.getElementById("binLocation").value.trim() || "UNKNOWN";
-
-//   for (let i = 1; i <= bags; i++) {
-//     printReceipt(
-//       `BAG LABEL\nControl: ${control}\nBag ${i} of ${bags}\nBin: ${bin}\n\n\f\n`
-//     );
-//   }
-// }
 
 function printBagLabels() {
   const control = document.getElementById("bagsControl").textContent;
