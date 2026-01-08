@@ -10,11 +10,59 @@ app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
+// const pool = new Pool({
+//   connectionString:
+//     process.env.DATABASE_URL ||
+//     "postgres://postgres:Meaghan1@localhost:5432/t4t_workflow",
+//   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+// });
+
 const pool = new Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    "postgres://postgres:Meaghan1@localhost:5432/t4t_workflow",
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes("render.com")
+    ? { rejectUnauthorized: false }
+    : false,
+});
+
+const session = require("express-session");
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "dev-secret",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.get("/login", (req, res) => {
+  res.render("login", { error: null });
+});
+
+app.post("/login", express.urlencoded({ extended: true }), (req, res) => {
+  const { username, password } = req.body;
+
+  if (
+    username === process.env.LOGIN_USER &&
+    password === process.env.LOGIN_PASS
+  ) {
+    req.session.loggedIn = true;
+    return res.redirect("/");
+  }
+
+  res.render("login", { error: "Invalid credentials" });
+});
+
+function requireLogin(req, res, next) {
+  if (req.session.loggedIn) return next();
+  res.redirect("/login");
+}
+
+app.use(requireLogin);
+
+app.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login");
+  });
 });
 
 // GET home page
