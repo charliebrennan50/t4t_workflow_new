@@ -192,6 +192,10 @@ app.post("/api/import-child", async (req, res) => {
   }
 });
 
+app.get("/reports", (req, res) => {
+  res.render("reports", { error: null });
+});
+
 app.listen(PORT, () =>
   console.log(`Server running at http://localhost:${PORT}`)
 );

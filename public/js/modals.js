@@ -35,8 +35,6 @@ function openShoppingModal(family) {
 function openBagsModal(family) {
   document.getElementById("bagsControl").textContent = family.control_number;
   const numChildren = family.children.length || 1;
-  // document.getElementById("numBags").value = 1;
-  // document.getElementById("binLocation").value = "A12";
   document.getElementById("numToys").value = numChildren * 4;
   document.getElementById("numBooks").value = numChildren;
   document.getElementById("numStuffers").value = numChildren;
