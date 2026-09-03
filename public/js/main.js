@@ -138,7 +138,9 @@ function handleFileSelect(event) {
             : null;
 
           if (genderRaw && ageStr && /^\d+$/.test(ageStr)) {
-            const gender = genderRaw.includes("M") ? "Boy" : "Girl";
+            const gender = genderRaw.includes("F") ? "Girl" : "Boy";
+            //const gender = genderRaw.includes("M") ? "Boy" : "Girl";
+
             const age = parseInt(ageStr, 10);
 
             await fetch("/api/import-child", {
