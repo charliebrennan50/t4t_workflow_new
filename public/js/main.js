@@ -108,7 +108,7 @@ function handleFileSelect(event) {
       const control_number = values[0].replace(/"/g, "").trim();
       if (!/^\d{7}$/.test(control_number)) continue;
 
-      const family_comments =
+      const family_comment =
         values.length > 1 ? values[1].replace(/"/g, "").trim() || null : null;
 
       try {
@@ -120,7 +120,7 @@ function handleFileSelect(event) {
           },
           body: JSON.stringify({
             control_number,
-            family_comments,
+            family_comment,
           }),
         });
 

@@ -136,7 +136,7 @@ app.post("/api/finalize", async (req, res) => {
 });
 
 app.post("/api/import-recipient", async (req, res) => {
-  const { control_number, family_comments, status } = req.body;
+  const { control_number, family_comment, status } = req.body;
 
   try {
     await pool.query(
@@ -146,7 +146,7 @@ app.post("/api/import-recipient", async (req, res) => {
        DO UPDATE SET
          status = EXCLUDED.status,
          family_comment = EXCLUDED.family_comment`,
-      [control_number, status || "approved", family_comments || null]
+      [control_number, status || "approved", family_comment || null]
     );
 
     res.json({ success: true });
