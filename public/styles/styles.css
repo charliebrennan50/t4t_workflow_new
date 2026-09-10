@@ -42,6 +42,22 @@ body {
   border-left: 6px solid #ffc107 !important;
 }
 
+.card .display-5,
+.card .display-6 {
+  line-height: 1.1;
+}
+
+.family-comment {
+  font-style: italic;
+  color: #6c757d;
+  white-space: pre-wrap;
+}
+
+.label .family-comment {
+  font-size: 12px;
+  color: #000;
+}
+
 @media print {
   @page {
     size: 2in 2in;

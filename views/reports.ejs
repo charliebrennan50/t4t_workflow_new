@@ -1,1 +1,104 @@
 <%- include('partials/header', { pageTitle: "Reports" }) %>
+
+<div class="container py-4">
+  <h1 class="mb-2">Reports</h1>
+  <p class="text-muted mb-4">
+    Running totals by status (families / control numbers).
+    <% if (generatedAt) { %>
+      As of <%= generatedAt.toLocaleString() %>.
+    <% } %>
+    Refresh this page for a live count.
+  </p>
+
+  <% if (error) { %>
+    <div class="alert alert-danger"><%= error %></div>
+  <% } %>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-primary h-100">
+        <div class="card-body">
+          <h6 class="text-primary text-uppercase mb-1">Approved</h6>
+          <div class="display-5 fw-semibold"><%= counts.approved %></div>
+          <small class="text-muted">Waiting to shop</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-warning h-100">
+        <div class="card-body">
+          <h6 class="text-warning text-uppercase mb-1">Being shopped</h6>
+          <div class="display-5 fw-semibold"><%= counts.being_shopped %></div>
+          <small class="text-muted">On the floor</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-info h-100">
+        <div class="card-body">
+          <h6 class="text-info text-uppercase mb-1">Ready for pickup</h6>
+          <div class="display-5 fw-semibold"><%= counts.ready_for_pickup %></div>
+          <small class="text-muted">Bagged and binned</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="card border-success h-100">
+        <div class="card-body">
+          <h6 class="text-success text-uppercase mb-1">Complete</h6>
+          <div class="display-5 fw-semibold"><%= counts.complete %></div>
+          <small class="text-muted">Picked up</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="mb-0">Total families</h5>
+        <small class="text-muted">Sum of the four statuses<% if (counts.other) { %> plus unexpected status values<% } %></small>
+      </div>
+      <div class="display-6 fw-semibold"><%= total %></div>
+    </div>
+  </div>
+
+  <h2 class="h4 mb-3">Items recorded</h2>
+  <p class="text-muted">
+    Running totals from bags entered at Ready for Pickup (and kept after Complete).
+    Approved and Being Shopped are usually zero until a family is bagged.
+  </p>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase mb-1">Toys</h6>
+          <div class="display-5 fw-semibold"><%= items.toys %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase mb-1">Books</h6>
+          <div class="display-5 fw-semibold"><%= items.books %></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="text-uppercase mb-1">Stocking stuffers</h6>
+          <div class="display-5 fw-semibold"><%= items.stuffers %></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if (counts.other) { %>
+    <div class="alert alert-warning mt-3">
+      <%= counts.other %> row(s) have a status that is not one of the four expected values.
+      That should not happen in season — check the database before loading more data.
+    </div>
+  <% } %>
+</div>

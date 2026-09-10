@@ -1,4 +1,12 @@
 // Render families into sections
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function renderFamilies() {
   const groups = {
     approved: [],
@@ -21,12 +29,22 @@ function renderFamilies() {
               const kids = f.children
                 .map(
                   (c) =>
-                    `${c.gender} age ${c.age}` +
-                    (c.special_requests ? ` — ${c.special_requests}` : "")
+                    `${escapeHtml(c.gender)} age ${escapeHtml(c.age)}` +
+                    (c.special_requests
+                      ? ` — ${escapeHtml(c.special_requests)}`
+                      : "")
                 )
                 .join("<br>");
-              return `<div class="family-row" onclick="handleClick('${f.control_number}', '${f.status || "approved"}')">
-                        <strong>#${f.control_number}</strong><br><div class="mt-2">${kids}</div>
+              const comment =
+                status === "approved" && f.family_comment
+                  ? `<div class="mt-2 family-comment">${escapeHtml(
+                      f.family_comment
+                    )}</div>`
+                  : "";
+              return `<div class="family-row" onclick="handleClick('${escapeHtml(
+                f.control_number
+              )}', '${f.status || "approved"}')">
+                        <strong>#${escapeHtml(f.control_number)}</strong><br><div class="mt-2">${kids}</div>${comment}
                     </div>`;
             })
             .join("");
@@ -139,7 +157,6 @@ function handleFileSelect(event) {
 
           if (genderRaw && ageStr && /^\d+$/.test(ageStr)) {
             const gender = genderRaw.includes("F") ? "Girl" : "Boy";
-            //const gender = genderRaw.includes("M") ? "Boy" : "Girl";
 
             const age = parseInt(ageStr, 10);
 
@@ -178,6 +195,7 @@ window.showSection = showSection;
 window.handleClick = handleClick;
 window.searchControl = searchControl;
 window.handleFileSelect = handleFileSelect;
+window.escapeHtml = escapeHtml;
 
 renderFamilies();
 showSection("approved"); // default

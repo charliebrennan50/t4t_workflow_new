@@ -192,8 +192,58 @@ app.post("/api/import-child", async (req, res) => {
   }
 });
 
-app.get("/reports", (req, res) => {
-  res.render("reports", { error: null });
+app.get("/reports", async (req, res) => {
+  const STATUSES = [
+    "approved",
+    "being_shopped",
+    "ready_for_pickup",
+    "complete",
+  ];
+
+  try {
+    const result = await pool.query(`
+      SELECT
+        COALESCE(status, 'approved') AS status,
+        COUNT(*)::int AS family_count,
+        COALESCE(SUM(toys), 0)::int AS toys,
+        COALESCE(SUM(books), 0)::int AS books,
+        COALESCE(SUM(stuffers), 0)::int AS stuffers
+      FROM recipients
+      GROUP BY COALESCE(status, 'approved')
+    `);
+
+    const counts = { approved: 0, being_shopped: 0, ready_for_pickup: 0, complete: 0, other: 0 };
+    const items = { toys: 0, books: 0, stuffers: 0 };
+    for (const row of result.rows) {
+      if (Object.prototype.hasOwnProperty.call(counts, row.status)) {
+        counts[row.status] = row.family_count;
+      } else {
+        counts.other += row.family_count;
+      }
+      items.toys += row.toys;
+      items.books += row.books;
+      items.stuffers += row.stuffers;
+    }
+
+    const total = STATUSES.reduce((sum, key) => sum + counts[key], 0) + counts.other;
+
+    res.render("reports", {
+      error: null,
+      counts,
+      items,
+      total,
+      generatedAt: new Date(),
+    });
+  } catch (err) {
+    console.error("[REPORTS] status totals:", err);
+    res.status(500).render("reports", {
+      error: "Could not load status totals. Database may be unreachable.",
+      counts: { approved: 0, being_shopped: 0, ready_for_pickup: 0, complete: 0, other: 0 },
+      items: { toys: 0, books: 0, stuffers: 0 },
+      total: 0,
+      generatedAt: new Date(),
+    });
+  }
 });
 
 app.listen(PORT, () =>

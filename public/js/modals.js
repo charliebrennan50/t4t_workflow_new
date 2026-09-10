@@ -17,18 +17,28 @@ function printReceipt(htmlContent) {
   printWindow.document.close();
 }
 
+function familyCommentHtml(family) {
+  if (!family || !family.family_comment) return "";
+  return `<p class="family-comment">${escapeHtml(family.family_comment)}</p>`;
+}
+
 // OPEN MODALS
 function openShoppingModal(family) {
   document.getElementById("shopControl").textContent = family.control_number;
   document.getElementById("shopKids").innerHTML = family.children
     .map(
       (c) =>
-        `<strong>${c.gender} age ${c.age}</strong>` +
+        `<strong>${escapeHtml(c.gender)} age ${escapeHtml(c.age)}</strong>` +
         (c.special_requests
-          ? `<br><em class="text-danger">${c.special_requests}</em>`
+          ? `<br><em class="text-danger">${escapeHtml(c.special_requests)}</em>`
           : "")
     )
     .join("<br>");
+  const commentEl = document.getElementById("shopComment");
+  if (commentEl) {
+    commentEl.textContent = family.family_comment || "";
+    commentEl.style.display = family.family_comment ? "block" : "none";
+  }
   new bootstrap.Modal(document.getElementById("shoppingModal")).show();
 }
 
@@ -56,21 +66,18 @@ function printShoppingCard() {
   const kids = family.children
     .map(
       (c) =>
-        `${c.gender} age ${c.age}` +
-        (c.special_requests ? ` — ${c.special_requests}` : "")
+        `${escapeHtml(c.gender)} age ${escapeHtml(c.age)}` +
+        (c.special_requests ? ` — ${escapeHtml(c.special_requests)}` : "")
     )
     .join("<br>");
 
-  shopHtml = `
+  const shopHtml = `
       <div class="label">
-        <h1>${control}</h1>
+        <h1>${escapeHtml(control)}</h1>
         <p>${kids}</p>
+        ${familyCommentHtml(family)}
       </div>
     `;
-
-  // printReceipt(
-  //   `TOYS FOR TOTS SOUTH BREVARD\nCONTROL: ${control}\n${kids}\nThank you!`
-  // );
 
   printReceipt(shopHtml);
 }
@@ -84,9 +91,9 @@ function printBagLabels() {
   for (let i = 1; i <= bags; i++) {
     labelsHtml += `
       <div class="label">
-      <h1>${control}</h1>
+      <h1>${escapeHtml(control)}</h1>
       <p>Bag ${i} of ${bags}</p>
-      <p>Bin: ${bin}</p>
+      <p>Bin: ${escapeHtml(bin)}</p>
      </div>
     `;
   }
@@ -99,11 +106,11 @@ function printPickupCard() {
   const bin = document.getElementById("pickupBin").textContent;
   const bags = document.getElementById("pickupBags").textContent;
 
-  pickupHtml = `
+  const pickupHtml = `
       <div class="label">
-        <h1>${control}</h1>
-        <p>Bin: ${bin}</p>
-        <p>Bags: ${bags}</p>
+        <h1>${escapeHtml(control)}</h1>
+        <p>Bin: ${escapeHtml(bin)}</p>
+        <p>Bags: ${escapeHtml(bags)}</p>
       </div>
     `;
 
