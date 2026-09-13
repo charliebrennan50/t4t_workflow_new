@@ -75,8 +75,8 @@ app.get("/", async (req, res) => {
                'age', c.age, 
                'special_requests', c.special_requests
              ) ORDER BY c.id) FILTER (WHERE c.id IS NOT NULL), '[]') AS children
-      FROM recipients r
-      LEFT JOIN children c ON r.control_number = c.control_number
+      FROM workflow.recipients r
+      LEFT JOIN workflow.children c ON r.control_number = c.control_number
       GROUP BY r.id
       ORDER BY r.control_number
     `);
@@ -102,17 +102,17 @@ app.post("/api/finalize", async (req, res) => {
   try {
     if (status === "being_shopped") {
       await pool.query(
-        `UPDATE recipients SET status = $1 WHERE control_number = $2`,
+        `UPDATE workflow.recipients SET status = $1 WHERE control_number = $2`,
         [status, control_number]
       );
     } else if (status === "complete") {
       await pool.query(
-        `UPDATE recipients SET status = $1, pickup_date = $2 WHERE control_number = $3`,
+        `UPDATE workflow.recipients SET status = $1, pickup_date = $2 WHERE control_number = $3`,
         [status, pickup_date, control_number]
       );
     } else {
       await pool.query(
-        `UPDATE recipients 
+        `UPDATE workflow.recipients 
          SET status = $1, bags = $2, bin = $3, toys = $4, books = $5, stuffers = $6
          WHERE control_number = $7`,
         [
@@ -140,7 +140,7 @@ app.post("/api/import-recipient", async (req, res) => {
 
   try {
     await pool.query(
-      `INSERT INTO recipients (control_number, status, family_comment)
+      `INSERT INTO workflow.recipients (control_number, status, family_comment)
        VALUES ($1, $2, $3)
        ON CONFLICT (control_number)
        DO UPDATE SET
@@ -168,7 +168,7 @@ app.post("/api/import-child", async (req, res) => {
 
     // Ensure recipient exists (idempotent)
     await client.query(
-      `INSERT INTO recipients (control_number, status)
+      `INSERT INTO workflow.recipients (control_number, status)
        VALUES ($1, 'approved')
        ON CONFLICT (control_number) DO NOTHING`,
       [control_number]
@@ -176,7 +176,7 @@ app.post("/api/import-child", async (req, res) => {
 
     // Insert child
     await client.query(
-      `INSERT INTO children (control_number, gender, age, special_requests)
+      `INSERT INTO workflow.children (control_number, gender, age, special_requests)
        VALUES ($1, $2, $3, $4)`,
       [control_number, gender, age, special_requests || null]
     );
@@ -208,7 +208,7 @@ app.get("/reports", async (req, res) => {
         COALESCE(SUM(toys), 0)::int AS toys,
         COALESCE(SUM(books), 0)::int AS books,
         COALESCE(SUM(stuffers), 0)::int AS stuffers
-      FROM recipients
+      FROM workflow.recipients
       GROUP BY COALESCE(status, 'approved')
     `);
 
