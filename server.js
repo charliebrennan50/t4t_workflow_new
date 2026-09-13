@@ -135,63 +135,6 @@ app.post("/api/finalize", async (req, res) => {
   }
 });
 
-app.post("/api/import-recipient", async (req, res) => {
-  const { control_number, family_comment, status } = req.body;
-
-  try {
-    await pool.query(
-      `INSERT INTO workflow.recipients (control_number, status, family_comment)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (control_number)
-       DO UPDATE SET
-         status = EXCLUDED.status,
-         family_comment = EXCLUDED.family_comment`,
-      [control_number, status || "approved", family_comment || null]
-    );
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("Import recipient error:", err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-app.post("/api/import-child", async (req, res) => {
-  // console.log("Received import-child request:", req.body);
-
-  const { control_number, gender, age, special_requests } = req.body;
-
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    // Ensure recipient exists (idempotent)
-    await client.query(
-      `INSERT INTO workflow.recipients (control_number, status)
-       VALUES ($1, 'approved')
-       ON CONFLICT (control_number) DO NOTHING`,
-      [control_number]
-    );
-
-    // Insert child
-    await client.query(
-      `INSERT INTO workflow.children (control_number, gender, age, special_requests)
-       VALUES ($1, $2, $3, $4)`,
-      [control_number, gender, age, special_requests || null]
-    );
-
-    await client.query("COMMIT");
-    res.json({ success: true });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("Import child error:", err);
-    res.status(500).json({ success: false });
-  } finally {
-    client.release();
-  }
-});
-
 app.get("/reports", async (req, res) => {
   const STATUSES = [
     "approved",

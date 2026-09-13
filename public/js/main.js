@@ -102,99 +102,10 @@ document.getElementById("searchInput").addEventListener("keypress", (e) => {
   if (e.key === "Enter") searchControl();
 });
 
-function handleFileSelect(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = async function (e) {
-    const text = e.target.result;
-    const lines = text.split("\n");
-    console.log(`Total lines: ${lines.length}`);
-
-    let success = 0;
-    let errors = 0;
-
-    // Skip header
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      const values = line.split(",");
-      if (values.length < 1) continue;
-
-      const control_number = values[0].replace(/"/g, "").trim();
-      if (!/^\d{7}$/.test(control_number)) continue;
-
-      const family_comment =
-        values.length > 1 ? values[1].replace(/"/g, "").trim() || null : null;
-
-      try {
-        // Save recipient
-        await fetch("/api/import-recipient", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            control_number,
-            family_comment,
-          }),
-        });
-
-        // Save children — GENDER, AGE, COMMENTS repeating
-        let col = 2; // start at first GENDER
-        while (col + 2 < values.length) {
-          const genderRaw = values[col]
-            ? values[col].replace(/"/g, "").trim().toUpperCase()
-            : "";
-          const ageStr = values[col + 1]
-            ? values[col + 1].replace(/"/g, "").trim()
-            : "";
-          const special_requests = values[col + 2]
-            ? values[col + 2].replace(/"/g, "").trim() || null
-            : null;
-
-          if (genderRaw && ageStr && /^\d+$/.test(ageStr)) {
-            const gender = genderRaw.includes("F") ? "Girl" : "Boy";
-
-            const age = parseInt(ageStr, 10);
-
-            await fetch("/api/import-child", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                control_number,
-                gender,
-                age,
-                special_requests,
-              }),
-            });
-          }
-          col += 3; // move to next GENDER
-        }
-
-        success++;
-      } catch (err) {
-        errors++;
-        console.error(`Line ${i + 1}:`, err);
-      }
-    }
-
-    alert(`Import complete!\n${success} families saved\n${errors} errors`);
-    location.reload();
-  };
-
-  reader.readAsText(file);
-}
-
 window.renderFamilies = renderFamilies;
 window.showSection = showSection;
 window.handleClick = handleClick;
 window.searchControl = searchControl;
-window.handleFileSelect = handleFileSelect;
 window.escapeHtml = escapeHtml;
 
 renderFamilies();
