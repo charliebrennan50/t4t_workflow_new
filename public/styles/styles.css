@@ -72,7 +72,8 @@ body {
   .label {
     width: 2in;
     height: 2in;
-    page-break-after: always; /* force each label on its own page */
+    page-break-after: always;
+    /* force each label on its own page */
     box-sizing: border-box;
     padding: 0.1in;
     text-align: center;
@@ -84,7 +85,8 @@ body {
 
   .label h1,
   .label p {
-    margin: 0; /* remove default margins that shift content */
+    margin: 0;
+    /* remove default margins that shift content */
     padding: 0;
   }
 }
