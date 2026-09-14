@@ -54,28 +54,35 @@ body {
 }
 
 .label .family-comment {
-  font-size: 12px;
+  font-size: 13px;
   color: #000;
 }
 
+/* HP KE-100 / 4x2 in thermal stock.
+   Browser print only — driver must use 4.00 x 2.00 in, 0 margins, no fit-to-page. */
 @media print {
   @page {
-    size: 2in 2in;
+    size: 4in 2in;
     margin: 0;
   }
 
+  html,
   body {
     margin: 0;
     padding: 0;
+    width: 4in;
+    background: #fff;
   }
 
   .label {
-    width: 2in;
+    width: 4in;
     height: 2in;
+    max-height: 2in;
+    overflow: hidden;
     page-break-after: always;
-    /* force each label on its own page */
+    break-after: page;
     box-sizing: border-box;
-    padding: 0.1in;
+    padding: 0.12in 0.16in;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -86,7 +93,31 @@ body {
   .label h1,
   .label p {
     margin: 0;
-    /* remove default margins that shift content */
     padding: 0;
+  }
+
+  .label h1 {
+    font-size: 28pt;
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .label p {
+    font-size: 11pt;
+    line-height: 1.2;
+    margin-top: 0.04in;
+  }
+
+  .label .family-comment {
+    font-size: 10pt;
+    margin-top: 0.06in;
+    max-width: 3.6in;
+  }
+
+  .label .label-cont {
+    font-size: 8pt;
+    margin-top: 0.02in;
+    letter-spacing: 0.04em;
   }
 }

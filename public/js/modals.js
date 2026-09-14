@@ -1,9 +1,9 @@
 function printReceipt(htmlContent) {
-  const printWindow = window.open("", "", "width=380,height=600");
+  const printWindow = window.open("", "", "width=640,height=360");
   printWindow.document.write(`
     <html>
       <head>
-        <title>Print</title>
+        <title>Print 4x2</title>
         <link rel="stylesheet" href="/styles/styles.css">
       </head>
       <body>
@@ -20,6 +20,92 @@ function printReceipt(htmlContent) {
 function familyCommentHtml(family) {
   if (!family || !family.family_comment) return "";
   return `<p class="family-comment">${escapeHtml(family.family_comment)}</p>`;
+}
+
+function wrapPrintLines(text, width) {
+  const words = String(text || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+  const lines = [];
+  let cur = "";
+  for (const word of words) {
+    const next = cur ? `${cur} ${word}` : word;
+    if (next.length > width && cur) {
+      lines.push(cur);
+      cur = word;
+    } else {
+      cur = next;
+    }
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function shoppingCardLines(family) {
+  const lines = [];
+  const children = (family && family.children) || [];
+  children.forEach((c) => {
+    const head = `${c.gender} age ${c.age}`;
+    if (c.special_requests) {
+      wrapPrintLines(`${head} — ${c.special_requests}`, 42).forEach((t) =>
+        lines.push({ kind: "kid", text: t })
+      );
+    } else {
+      lines.push({ kind: "kid", text: head });
+    }
+  });
+  if (family && family.family_comment) {
+    wrapPrintLines(family.family_comment, 48).forEach((t) =>
+      lines.push({ kind: "comment", text: t })
+    );
+  }
+  return lines;
+}
+
+function printShoppingCard() {
+  const control = document.getElementById("shopControl").textContent;
+  const family = families.find((f) => f.control_number === control) || {
+    children: [],
+    family_comment: "",
+  };
+  const lines = shoppingCardLines(family);
+  const LINES_PER_CARD = 6;
+  const pages = [];
+  if (!lines.length) {
+    pages.push([]);
+  } else {
+    for (let i = 0; i < lines.length; i += LINES_PER_CARD) {
+      pages.push(lines.slice(i, i + LINES_PER_CARD));
+    }
+  }
+
+  const shopHtml = pages
+    .map((pageLines, idx) => {
+      const kidsHtml = pageLines
+        .filter((l) => l.kind === "kid")
+        .map((l) => escapeHtml(l.text))
+        .join("<br>");
+      const commentHtml = pageLines
+        .filter((l) => l.kind === "comment")
+        .map((l) => escapeHtml(l.text))
+        .join("<br>");
+      const cont =
+        pages.length > 1
+          ? `<p class="label-cont">${idx + 1} of ${pages.length}</p>`
+          : "";
+      return `
+      <div class="label">
+        <h1>${escapeHtml(control)}</h1>
+        ${cont}
+        ${kidsHtml ? `<p>${kidsHtml}</p>` : ""}
+        ${commentHtml ? `<p class="family-comment">${commentHtml}</p>` : ""}
+      </div>`;
+    })
+    .join("");
+
+  printReceipt(shopHtml);
 }
 
 // OPEN MODALS
@@ -57,29 +143,6 @@ function openPickupModal(family) {
   document.getElementById("pickupBags").textContent =
     family.bags || "Ask staff";
   new bootstrap.Modal(document.getElementById("pickupModal")).show();
-}
-
-// PRINT FUNCTIONS
-function printShoppingCard() {
-  const control = document.getElementById("shopControl").textContent;
-  const family = families.find((f) => f.control_number === control);
-  const kids = family.children
-    .map(
-      (c) =>
-        `${escapeHtml(c.gender)} age ${escapeHtml(c.age)}` +
-        (c.special_requests ? ` — ${escapeHtml(c.special_requests)}` : "")
-    )
-    .join("<br>");
-
-  const shopHtml = `
-      <div class="label">
-        <h1>${escapeHtml(control)}</h1>
-        <p>${kids}</p>
-        ${familyCommentHtml(family)}
-      </div>
-    `;
-
-  printReceipt(shopHtml);
 }
 
 function printBagLabels() {
