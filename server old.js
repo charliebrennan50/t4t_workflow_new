@@ -107,22 +107,13 @@ app.post("/api/finalize", async (req, res) => {
       );
     } else if (status === "complete") {
       await pool.query(
-        `UPDATE workflow.recipients
-         SET status = $1,
-             pickup_date = (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date
-         WHERE control_number = $2`,
-        [status, control_number]
+        `UPDATE workflow.recipients SET status = $1, pickup_date = $2 WHERE control_number = $3`,
+        [status, pickup_date, control_number]
       );
-    } else if (status === "ready_for_pickup") {
+    } else {
       await pool.query(
-        `UPDATE workflow.recipients
-         SET status = $1,
-             bags = $2,
-             bin = $3,
-             toys = $4,
-             books = $5,
-             stuffers = $6,
-             shopped_date = (CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')::date
+        `UPDATE workflow.recipients 
+         SET status = $1, bags = $2, bin = $3, toys = $4, books = $5, stuffers = $6
          WHERE control_number = $7`,
         [
           status,
@@ -134,9 +125,6 @@ app.post("/api/finalize", async (req, res) => {
           control_number,
         ]
       );
-    } else {
-      res.status(400).json({ success: false, error: "Unknown status" });
-      return;
     }
 
     res.json({ success: true });
@@ -154,11 +142,6 @@ app.get("/reports", async (req, res) => {
     "ready_for_pickup",
     "complete",
   ];
-
-  const shoppedDate = typeof req.query.shopped === "string" ? req.query.shopped.trim() : "";
-  const pickupDate = typeof req.query.pickup === "string" ? req.query.pickup.trim() : "";
-  const shoppedOk = /^\d{4}-\d{2}-\d{2}$/.test(shoppedDate);
-  const pickupOk = /^\d{4}-\d{2}-\d{2}$/.test(pickupDate);
 
   try {
     const result = await pool.query(`
@@ -187,48 +170,12 @@ app.get("/reports", async (req, res) => {
 
     const total = STATUSES.reduce((sum, key) => sum + counts[key], 0) + counts.other;
 
-    let shopped = [];
-    let shoppedError = null;
-    if (shoppedDate && !shoppedOk) {
-      shoppedError = "Enter a date as YYYY-MM-DD.";
-    } else if (shoppedOk) {
-      const shoppedResult = await pool.query(
-        `SELECT control_number, status, bin, bags
-         FROM workflow.recipients
-         WHERE shopped_date = $1::date
-         ORDER BY control_number`,
-        [shoppedDate]
-      );
-      shopped = shoppedResult.rows;
-    }
-
-    let pickedUp = [];
-    let pickupError = null;
-    if (pickupDate && !pickupOk) {
-      pickupError = "Enter a date as YYYY-MM-DD.";
-    } else if (pickupOk) {
-      const pickupResult = await pool.query(
-        `SELECT control_number, status, bin, bags
-         FROM workflow.recipients
-         WHERE pickup_date::date = $1::date
-         ORDER BY control_number`,
-        [pickupDate]
-      );
-      pickedUp = pickupResult.rows;
-    }
-
     res.render("reports", {
       error: null,
       counts,
       items,
       total,
       generatedAt: new Date(),
-      shoppedDate,
-      shopped,
-      shoppedError,
-      pickupDate,
-      pickedUp,
-      pickupError,
     });
   } catch (err) {
     console.error("[REPORTS] status totals:", err);
@@ -238,12 +185,6 @@ app.get("/reports", async (req, res) => {
       items: { toys: 0, books: 0, stuffers: 0 },
       total: 0,
       generatedAt: new Date(),
-      shoppedDate: "",
-      shopped: [],
-      shoppedError: null,
-      pickupDate: "",
-      pickedUp: [],
-      pickupError: null,
     });
   }
 });
