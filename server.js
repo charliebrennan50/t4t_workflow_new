@@ -17,9 +17,10 @@ app.set("views", "./views");
 //   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 // });
 
+const databaseUrl = process.env.DATABASE_URL || "";
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL?.includes("render.com")
+  connectionString: databaseUrl,
+  ssl: databaseUrl.includes("-a.") || databaseUrl.includes("sslmode=require")
     ? { rejectUnauthorized: false }
     : false,
 });
