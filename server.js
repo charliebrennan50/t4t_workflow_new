@@ -248,6 +248,75 @@ app.get("/reports", async (req, res) => {
   }
 });
 
+function csvCell(value) {
+  if (value === null || value === undefined) return "";
+  const text = String(value);
+  if (/[",\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+  return text;
+}
+
+app.get("/reports/csv", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        r.control_number,
+        r.status,
+        r.family_comment,
+        r.bags,
+        r.bin,
+        r.toys,
+        r.books,
+        r.stuffers,
+        r.shopped_date,
+        r.pickup_date,
+        string_agg(
+          c.gender || ' age ' || c.age ||
+          CASE
+            WHEN c.special_requests IS NOT NULL AND btrim(c.special_requests) <> ''
+            THEN ' — ' || c.special_requests
+            ELSE ''
+          END,
+          '; ' ORDER BY c.id
+        ) AS children
+      FROM workflow.recipients r
+      LEFT JOIN workflow.children c ON c.control_number = r.control_number
+      GROUP BY r.id
+      ORDER BY r.control_number
+    `);
+
+    const headers = [
+      "control_number",
+      "status",
+      "family_comment",
+      "bags",
+      "bin",
+      "toys",
+      "books",
+      "stuffers",
+      "shopped_date",
+      "pickup_date",
+      "children",
+    ];
+    const lines = [headers.join(",")];
+    for (const row of result.rows) {
+      lines.push(headers.map((key) => csvCell(row[key])).join(","));
+    }
+
+    const day = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/New_York",
+    }).format(new Date());
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="t4t_workflow_${day}.csv"`
+    );
+    res.send(lines.join("\r\n"));
+  } catch (err) {
+    console.error("[REPORTS] csv:", err);
+    res.status(500).send("Could not build the CSV dump.");
+  }
+});
+
 app.listen(PORT, () =>
   console.log(`Server running at http://localhost:${PORT}`)
 );
