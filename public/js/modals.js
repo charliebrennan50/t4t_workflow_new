@@ -3,13 +3,22 @@ function printReceipt(htmlContent, forPc) {
   const pcStyle = `
     <style>
       @media print {
-        .label.pc { padding: 0; overflow: hidden; display: block; position: relative; }
+        .label.pc {
+          width: 4in;
+          height: 2in;
+          padding: 0;
+          overflow: visible;
+          display: block;
+          position: relative;
+        }
         .label.pc .pc-rot {
           position: absolute;
           width: 2in;
           height: 4in;
-          left: 1in;
-          top: -1in;
+          left: 50%;
+          top: 50%;
+          margin-left: -1in;
+          margin-top: -2in;
           transform: rotate(-90deg);
           transform-origin: center center;
           display: flex;
@@ -18,7 +27,7 @@ function printReceipt(htmlContent, forPc) {
           justify-content: center;
           text-align: center;
           box-sizing: border-box;
-          padding: 0.12in 0.16in;
+          padding: 0.1in 0.12in;
         }
       }
     </style>`;
