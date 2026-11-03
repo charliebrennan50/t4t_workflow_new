@@ -120,4 +120,30 @@ body {
     margin-top: 0.02in;
     letter-spacing: 0.04em;
   }
+
+  /* PC label drivers rotate a correct 4x2 page by 90 degrees.
+     Pre-rotate so the sticker lands upright. Preview will look sideways. */
+  .label.pc {
+    padding: 0;
+    overflow: hidden;
+    display: block;
+    position: relative;
+  }
+
+  .label.pc .pc-rot {
+    position: absolute;
+    width: 2in;
+    height: 4in;
+    left: 1in;
+    top: -1in;
+    transform: rotate(-90deg);
+    transform-origin: center center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 0.12in 0.16in;
+  }
 }

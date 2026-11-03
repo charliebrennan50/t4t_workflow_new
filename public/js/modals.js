@@ -1,10 +1,33 @@
-function printReceipt(htmlContent) {
+function printReceipt(htmlContent, forPc) {
   const printWindow = window.open("", "", "width=640,height=360");
+  const pcStyle = `
+    <style>
+      @media print {
+        .label.pc { padding: 0; overflow: hidden; display: block; position: relative; }
+        .label.pc .pc-rot {
+          position: absolute;
+          width: 2in;
+          height: 4in;
+          left: 1in;
+          top: -1in;
+          transform: rotate(-90deg);
+          transform-origin: center center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          box-sizing: border-box;
+          padding: 0.12in 0.16in;
+        }
+      }
+    </style>`;
   printWindow.document.write(`
     <html>
       <head>
-        <title>Print 4x2</title>
+        <title>Print 4x2${forPc ? " PC" : ""}</title>
         <link rel="stylesheet" href="/styles/styles.css">
+        ${forPc ? pcStyle : ""}
       </head>
       <body>
         ${htmlContent}
@@ -64,7 +87,7 @@ function shoppingCardLines(family) {
   return lines;
 }
 
-function printShoppingCard() {
+function printShoppingCard(forPc) {
   const control = document.getElementById("shopControl").textContent;
   const family = families.find((f) => f.control_number === control) || {
     children: [],
@@ -96,16 +119,18 @@ function printShoppingCard() {
           ? `<p class="label-cont">${idx + 1} of ${pages.length}</p>`
           : "";
       return `
-      <div class="label">
+      <div class="label${forPc ? " pc" : ""}">
+        ${forPc ? '<div class="pc-rot">' : ""}
         <h1>${escapeHtml(control)}</h1>
         ${cont}
         ${kidsHtml ? `<p>${kidsHtml}</p>` : ""}
         ${commentHtml ? `<p class="family-comment">${commentHtml}</p>` : ""}
+        ${forPc ? "</div>" : ""}
       </div>`;
     })
     .join("");
 
-  printReceipt(shopHtml);
+  printReceipt(shopHtml, forPc);
 }
 
 // OPEN MODALS
@@ -145,7 +170,7 @@ function openPickupModal(family) {
   new bootstrap.Modal(document.getElementById("pickupModal")).show();
 }
 
-function printBagLabels() {
+function printBagLabels(forPc) {
   const control = document.getElementById("bagsControl").textContent;
   const bags = parseInt(document.getElementById("numBags").value) || 1;
   const bin = document.getElementById("binLocation").value.trim() || "UNKNOWN";
@@ -153,15 +178,17 @@ function printBagLabels() {
   let labelsHtml = "";
   for (let i = 1; i <= bags; i++) {
     labelsHtml += `
-      <div class="label">
+      <div class="label${forPc ? " pc" : ""}">
+      ${forPc ? '<div class="pc-rot">' : ""}
       <h1>${escapeHtml(control)}</h1>
       <p>Bag ${i} of ${bags}</p>
       <p>Bin: ${escapeHtml(bin)}</p>
+      ${forPc ? "</div>" : ""}
      </div>
     `;
   }
 
-  printReceipt(labelsHtml);
+  printReceipt(labelsHtml, forPc);
 }
 
 function printPickupCard() {
