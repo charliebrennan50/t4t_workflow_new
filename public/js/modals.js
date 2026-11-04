@@ -3,50 +3,45 @@ function printReceipt(htmlContent, forPc) {
   const pcStyle = `
     <style>
       @media print {
-        @page { size: 2in 4in; margin: 0; }
-        html, body { width: 2in; margin: 0; padding: 0; }
+        @page { size: 4in 2in; margin: 0; }
+        html, body { width: 4in; margin: 0; padding: 0; }
+        .pc-sheet { display: contents; }
         .label.pc {
           width: 4in;
           height: 2in;
-          max-height: none;
+          max-height: 2in;
           margin: 0;
           padding: 0.12in 0.16in;
-          position: absolute;
-          top: 0;
-          left: 0;
-          transform-origin: top left;
-          transform: translateY(2in) rotate(-90deg);
-          page-break-after: auto;
-          break-after: auto;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-        }
-        .pc-sheet {
-          width: 2in;
-          height: 4in;
-          position: relative;
-          overflow: hidden;
-          page-break-after: always;
-          break-after: page;
-        }
-        .pc-sheet:last-child {
-          page-break-after: auto;
-          break-after: auto;
-        }
-        .label.pc .pc-rot {
           position: static;
-          width: auto;
-          height: auto;
-          margin: 0;
           transform: none;
+          overflow: hidden;
+          writing-mode: vertical-rl;
+          text-orientation: sideways;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           text-align: center;
+          page-break-after: always;
+          break-after: page;
+        }
+        .label.pc:last-child {
+          page-break-after: auto;
+          break-after: auto;
+        }
+        .label.pc .pc-rot {
+          writing-mode: vertical-rl;
+          text-orientation: sideways;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          position: static;
+          width: auto;
+          height: auto;
+          margin: 0;
+          transform: none;
         }
       }
     </style>`;

@@ -121,38 +121,35 @@ body {
     letter-spacing: 0.04em;
   }
 
-  /* PC: driver rotates a 4x2 page. Send a 2x4 page with the
-     label turned so it fills the sticker. No trailing blank page. */
+  /* PC: same 4x2 page the driver already rotates.
+     writing-mode turns the glyphs so the sticker reads upright,
+     without a box that sticks out of the page. */
   .pc-sheet {
-    width: 2in;
-    height: 4in;
-    position: relative;
-    overflow: hidden;
-    page-break-after: always;
-    break-after: page;
-  }
-
-  .pc-sheet:last-child {
-    page-break-after: auto;
-    break-after: auto;
+    display: contents;
   }
 
   .label.pc {
     width: 4in;
     height: 2in;
-    max-height: none;
+    max-height: 2in;
     margin: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: top left;
-    transform: translateY(2in) rotate(-90deg);
+    position: static;
+    transform: none;
+    overflow: hidden;
+    writing-mode: vertical-rl;
+    text-orientation: sideways;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .label.pc:last-child {
     page-break-after: auto;
     break-after: auto;
-    overflow: hidden;
   }
 
   .label.pc .pc-rot {
+    writing-mode: vertical-rl;
+    text-orientation: sideways;
     position: static;
     width: auto;
     height: auto;
