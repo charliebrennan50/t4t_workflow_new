@@ -121,33 +121,47 @@ body {
     letter-spacing: 0.04em;
   }
 
-  /* PC label drivers rotate a correct 4x2 page by 90 degrees.
-     Pre-rotate so the sticker lands upright. Preview will look sideways. */
+  /* PC: driver rotates a 4x2 page. Send a 2x4 page with the
+     label turned so it fills the sticker. No trailing blank page. */
+  .pc-sheet {
+    width: 2in;
+    height: 4in;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+  }
+
+  .pc-sheet:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
   .label.pc {
     width: 4in;
     height: 2in;
-    padding: 0;
-    overflow: visible;
-    display: block;
-    position: relative;
+    max-height: none;
+    margin: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
+    transform: translateY(2in) rotate(-90deg);
+    page-break-after: auto;
+    break-after: auto;
+    overflow: hidden;
   }
 
   .label.pc .pc-rot {
-    position: absolute;
-    width: 2in;
-    height: 4in;
-    left: 50%;
-    top: 50%;
-    margin-left: -1in;
-    margin-top: -2in;
-    transform: rotate(-90deg);
-    transform-origin: center center;
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    transform: none;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    box-sizing: border-box;
-    padding: 0.1in 0.12in;
   }
 }

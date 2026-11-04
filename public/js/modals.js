@@ -3,31 +3,50 @@ function printReceipt(htmlContent, forPc) {
   const pcStyle = `
     <style>
       @media print {
+        @page { size: 2in 4in; margin: 0; }
+        html, body { width: 2in; margin: 0; padding: 0; }
         .label.pc {
           width: 4in;
           height: 2in;
-          padding: 0;
-          overflow: visible;
-          display: block;
-          position: relative;
-        }
-        .label.pc .pc-rot {
+          max-height: none;
+          margin: 0;
+          padding: 0.12in 0.16in;
           position: absolute;
+          top: 0;
+          left: 0;
+          transform-origin: top left;
+          transform: translateY(2in) rotate(-90deg);
+          page-break-after: auto;
+          break-after: auto;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+        .pc-sheet {
           width: 2in;
           height: 4in;
-          left: 50%;
-          top: 50%;
-          margin-left: -1in;
-          margin-top: -2in;
-          transform: rotate(-90deg);
-          transform-origin: center center;
+          position: relative;
+          overflow: hidden;
+          page-break-after: always;
+          break-after: page;
+        }
+        .pc-sheet:last-child {
+          page-break-after: auto;
+          break-after: auto;
+        }
+        .label.pc .pc-rot {
+          position: static;
+          width: auto;
+          height: auto;
+          margin: 0;
+          transform: none;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           text-align: center;
-          box-sizing: border-box;
-          padding: 0.1in 0.12in;
         }
       }
     </style>`;
@@ -128,6 +147,7 @@ function printShoppingCard(forPc) {
           ? `<p class="label-cont">${idx + 1} of ${pages.length}</p>`
           : "";
       return `
+      <div class="${forPc ? "pc-sheet" : ""}">
       <div class="label${forPc ? " pc" : ""}">
         ${forPc ? '<div class="pc-rot">' : ""}
         <h1>${escapeHtml(control)}</h1>
@@ -135,6 +155,7 @@ function printShoppingCard(forPc) {
         ${kidsHtml ? `<p>${kidsHtml}</p>` : ""}
         ${commentHtml ? `<p class="family-comment">${commentHtml}</p>` : ""}
         ${forPc ? "</div>" : ""}
+      </div>
       </div>`;
     })
     .join("");
@@ -187,12 +208,14 @@ function printBagLabels(forPc) {
   let labelsHtml = "";
   for (let i = 1; i <= bags; i++) {
     labelsHtml += `
+      <div class="${forPc ? "pc-sheet" : ""}">
       <div class="label${forPc ? " pc" : ""}">
       ${forPc ? '<div class="pc-rot">' : ""}
       <h1>${escapeHtml(control)}</h1>
       <p>Bag ${i} of ${bags}</p>
       <p>Bin: ${escapeHtml(bin)}</p>
       ${forPc ? "</div>" : ""}
+     </div>
      </div>
     `;
   }
