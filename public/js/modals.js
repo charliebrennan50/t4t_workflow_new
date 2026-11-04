@@ -2,11 +2,11 @@ function printReceipt(htmlContent, forPc) {
   const printWindow = window.open("", "", "width=640,height=360");
   const pcHead = `
         <style>
-          @page { size: 4in 2in; margin: 0; }
+          @page { size: 2in 4in; margin: 0; }
           html, body { margin: 0; padding: 0; }
           img.pc-label {
-            width: 4in;
-            height: 2in;
+            width: 2in;
+            height: 4in;
             display: block;
             page-break-after: always;
             break-after: page;
@@ -35,8 +35,8 @@ function printReceipt(htmlContent, forPc) {
 
 function renderPcLabel(lines) {
   const dpi = 203;
-  const W = 4 * dpi;
-  const H = 2 * dpi;
+  const W = 2 * dpi;
+  const H = 4 * dpi;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -48,14 +48,14 @@ function renderPcLabel(lines) {
   ctx.rotate(-Math.PI / 2);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const sizes = lines.map((_, i) => (i === 0 ? 72 : 40));
-  const gap = 14;
+  const sizes = lines.map((_, i) => (i === 0 ? 84 : 46));
+  const gap = 16;
   const total = sizes.reduce((sum, s) => sum + s + gap, 0) - gap;
   let y = -total / 2;
   lines.forEach((text, i) => {
     ctx.font = `${i === 0 ? "bold " : ""}${sizes[i]}px Arial, sans-serif`;
     y += sizes[i] / 2;
-    ctx.fillText(String(text), 0, y, H - 36);
+    ctx.fillText(String(text), 0, y, H - 48);
     y += sizes[i] / 2 + gap;
   });
   return canvas.toDataURL("image/png");
