@@ -120,45 +120,4 @@ body {
     margin-top: 0.02in;
     letter-spacing: 0.04em;
   }
-
-  /* PC: same 4x2 page the driver already rotates.
-     writing-mode turns the glyphs so the sticker reads upright,
-     without a box that sticks out of the page. */
-  .pc-sheet {
-    display: contents;
-  }
-
-  .label.pc {
-    width: 4in;
-    height: 2in;
-    max-height: 2in;
-    margin: 0;
-    position: static;
-    transform: none;
-    overflow: hidden;
-    writing-mode: vertical-rl;
-    text-orientation: sideways;
-    page-break-after: always;
-    break-after: page;
-  }
-
-  .label.pc:last-child {
-    page-break-after: auto;
-    break-after: auto;
-  }
-
-  .label.pc .pc-rot {
-    writing-mode: vertical-rl;
-    text-orientation: sideways;
-    position: static;
-    width: auto;
-    height: auto;
-    margin: 0;
-    transform: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
 }

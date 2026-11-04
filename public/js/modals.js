@@ -1,56 +1,26 @@
 function printReceipt(htmlContent, forPc) {
   const printWindow = window.open("", "", "width=640,height=360");
-  const pcStyle = `
-    <style>
-      @media print {
-        @page { size: 4in 2in; margin: 0; }
-        html, body { width: 4in; margin: 0; padding: 0; }
-        .pc-sheet { display: contents; }
-        .label.pc {
-          width: 4in;
-          height: 2in;
-          max-height: 2in;
-          margin: 0;
-          padding: 0.12in 0.16in;
-          position: static;
-          transform: none;
-          overflow: hidden;
-          writing-mode: vertical-rl;
-          text-orientation: sideways;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          page-break-after: always;
-          break-after: page;
-        }
-        .label.pc:last-child {
-          page-break-after: auto;
-          break-after: auto;
-        }
-        .label.pc .pc-rot {
-          writing-mode: vertical-rl;
-          text-orientation: sideways;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          position: static;
-          width: auto;
-          height: auto;
-          margin: 0;
-          transform: none;
-        }
-      }
-    </style>`;
+  const pcHead = `
+        <style>
+          @page { size: 4in 2in; margin: 0; }
+          html, body { margin: 0; padding: 0; }
+          img.pc-label {
+            width: 4in;
+            height: 2in;
+            display: block;
+            page-break-after: always;
+            break-after: page;
+          }
+          img.pc-label:last-child {
+            page-break-after: auto;
+            break-after: auto;
+          }
+        </style>`;
   printWindow.document.write(`
     <html>
       <head>
         <title>Print 4x2${forPc ? " PC" : ""}</title>
-        <link rel="stylesheet" href="/styles/styles.css">
-        ${forPc ? pcStyle : ""}
+        ${forPc ? pcHead : '<link rel="stylesheet" href="/styles/styles.css">'}
       </head>
       <body>
         ${htmlContent}
@@ -61,6 +31,38 @@ function printReceipt(htmlContent, forPc) {
     </html>
   `);
   printWindow.document.close();
+}
+
+function renderPcLabel(lines) {
+  const dpi = 203;
+  const W = 4 * dpi;
+  const H = 2 * dpi;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#000000";
+  ctx.translate(W / 2, H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const sizes = lines.map((_, i) => (i === 0 ? 72 : 40));
+  const gap = 14;
+  const total = sizes.reduce((sum, s) => sum + s + gap, 0) - gap;
+  let y = -total / 2;
+  lines.forEach((text, i) => {
+    ctx.font = `${i === 0 ? "bold " : ""}${sizes[i]}px Arial, sans-serif`;
+    y += sizes[i] / 2;
+    ctx.fillText(String(text), 0, y, H - 36);
+    y += sizes[i] / 2 + gap;
+  });
+  return canvas.toDataURL("image/png");
+}
+
+function pcLabelImg(lines) {
+  return `<img class="pc-label" src="${renderPcLabel(lines)}" alt="">`;
 }
 
 function familyCommentHtml(family) {
@@ -127,6 +129,19 @@ function printShoppingCard(forPc) {
     }
   }
 
+  if (forPc) {
+    const pcHtml = pages
+      .map((pageLines, idx) => {
+        const texts = [control];
+        if (pages.length > 1) texts.push(`${idx + 1} of ${pages.length}`);
+        pageLines.forEach((l) => texts.push(l.text));
+        return pcLabelImg(texts);
+      })
+      .join("");
+    printReceipt(pcHtml, true);
+    return;
+  }
+
   const shopHtml = pages
     .map((pageLines, idx) => {
       const kidsHtml = pageLines
@@ -142,15 +157,11 @@ function printShoppingCard(forPc) {
           ? `<p class="label-cont">${idx + 1} of ${pages.length}</p>`
           : "";
       return `
-      <div class="${forPc ? "pc-sheet" : ""}">
-      <div class="label${forPc ? " pc" : ""}">
-        ${forPc ? '<div class="pc-rot">' : ""}
+      <div class="label">
         <h1>${escapeHtml(control)}</h1>
         ${cont}
         ${kidsHtml ? `<p>${kidsHtml}</p>` : ""}
         ${commentHtml ? `<p class="family-comment">${commentHtml}</p>` : ""}
-        ${forPc ? "</div>" : ""}
-      </div>
       </div>`;
     })
     .join("");
@@ -200,17 +211,22 @@ function printBagLabels(forPc) {
   const bags = parseInt(document.getElementById("numBags").value) || 1;
   const bin = document.getElementById("binLocation").value.trim() || "UNKNOWN";
 
+  if (forPc) {
+    let labelsHtml = "";
+    for (let i = 1; i <= bags; i++) {
+      labelsHtml += pcLabelImg([control, `Bag ${i} of ${bags}`, `Bin: ${bin}`]);
+    }
+    printReceipt(labelsHtml, true);
+    return;
+  }
+
   let labelsHtml = "";
   for (let i = 1; i <= bags; i++) {
     labelsHtml += `
-      <div class="${forPc ? "pc-sheet" : ""}">
-      <div class="label${forPc ? " pc" : ""}">
-      ${forPc ? '<div class="pc-rot">' : ""}
+      <div class="label">
       <h1>${escapeHtml(control)}</h1>
       <p>Bag ${i} of ${bags}</p>
       <p>Bin: ${escapeHtml(bin)}</p>
-      ${forPc ? "</div>" : ""}
-     </div>
      </div>
     `;
   }
